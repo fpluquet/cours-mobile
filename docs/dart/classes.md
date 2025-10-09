@@ -46,6 +46,165 @@ class User {
 | Getter | `public bool IsAdult() { return age >= 18; }` | `bool get isAdult => age >= 18;` |
 | Final/Readonly | `readonly string name;` | `final String name;` |
 
+### Visibilité et convention de nommage avec `_`
+
+Contrairement à C# et Java qui utilisent des mots-clés explicites (`private`, `protected`, `public`), Dart utilise une **convention de nommage** simple et puissante : **tout ce qui commence par un underscore `_` est privé**.
+
+Cette règle s'applique à **tous les éléments** :
+
+```dart
+class BankAccount {
+  // Propriétés publiques (accessibles depuis l'extérieur)
+  final String accountNumber;
+  final String ownerName;
+  
+  // Propriétés privées (préfixées par _)
+  double _balance;
+  List<String> _transactions = [];
+  DateTime _lastAccess = DateTime.now();
+  
+  // Constructeur public
+  BankAccount(this.accountNumber, this.ownerName, double initialBalance)
+    : _balance = initialBalance;
+  
+  // Méthodes publiques
+  double get balance => _balance;
+  List<String> get transactions => List.unmodifiable(_transactions);
+  
+  void deposit(double amount) {
+    _validateAmount(amount);
+    _balance += amount;
+    _addTransaction('Dépôt: +$amount');
+    _updateLastAccess();
+  }
+  
+  // Méthodes privées (préfixées par _)
+  void _validateAmount(double amount) {
+    if (amount <= 0) {
+      throw ArgumentError('Le montant doit être positif');
+    }
+  }
+  
+  void _addTransaction(String description) {
+    _transactions.add('${DateTime.now()}: $description');
+  }
+  
+  void _updateLastAccess() {
+    _lastAccess = DateTime.now();
+  }
+  
+  // Getter/setter privés
+  DateTime get _formattedLastAccess => _lastAccess;
+  set _internalBalance(double value) => _balance = value;
+}
+
+// Classes privées (tout le fichier devient privé aux autres bibliothèques)
+class _InternalAuditLog {
+  static void _logAccess(String accountNumber) {
+    print('Accès au compte: $accountNumber');
+  }
+}
+```
+
+#### Portée de la visibilité privée
+
+**Important :** En Dart, "privé" signifie **privé au niveau de la bibliothèque** (fichier `.dart`), pas au niveau de la classe comme en C#/Java.
+
+```dart
+// Dans le même fichier (account.dart)
+class BankAccount {
+  double _balance = 0.0;
+  void _internalMethod() => print('Privé');
+}
+
+class BankManager {
+  void auditAccount(BankAccount account) {
+    // ✅ AUTORISÉ : même fichier, donc accès aux membres privés
+    print('Solde: ${account._balance}');
+    account._internalMethod();
+  }
+}
+
+// Dans un autre fichier (main.dart)
+import 'account.dart';
+
+void main() {
+  var account = BankAccount('123', 'Alice', 1000.0);
+  
+  // ✅ AUTORISÉ : membres publics
+  print('Solde: ${account.balance}');
+  account.deposit(100.0);
+  
+  // ❌ ERREUR : membres privés inaccessibles depuis un autre fichier
+  // print(account._balance);      // Erreur de compilation
+  // account._validateAmount(50);  // Erreur de compilation
+}
+```
+
+#### Conventions et bonnes pratiques
+
+| Élément | Convention | Exemple |
+|---------|------------|---------|
+| **Propriétés privées** | `_nomPropriete` | `_balance`, `_isValid` |
+| **Méthodes privées** | `_nomMethode()` | `_validateData()`, `_processInternal()` |
+| **Classes privées** | `_NomClasse` | `_DatabaseHelper`, `_InternalCache` |
+| **Constantes privées** | `_CONSTANTE` | `_MAX_RETRIES`, `_DEFAULT_TIMEOUT` |
+| **Getters/Setters privés** | `_propriete` | `get _formattedValue`, `set _internalState` |
+
+```dart
+class UserService {
+  // Configuration privée
+  static const int _MAX_RETRY_ATTEMPTS = 3;
+  static const Duration _TIMEOUT_DURATION = Duration(seconds: 30);
+  
+  // État interne privé
+  bool _isInitialized = false;
+  Map<String, dynamic> _cache = {};
+  
+  // Méthodes d'API publiques
+  Future<User?> getUser(String id) async {
+    _ensureInitialized();
+    return await _fetchUserWithRetry(id);
+  }
+  
+  // Logique interne privée
+  void _ensureInitialized() {
+    if (!_isInitialized) {
+      throw StateError('Service not initialized');
+    }
+  }
+  
+  Future<User?> _fetchUserWithRetry(String id) async {
+    for (int attempt = 1; attempt <= _MAX_RETRY_ATTEMPTS; attempt++) {
+      try {
+        return await _performRequest(id);
+      } catch (e) {
+        if (attempt == _MAX_RETRY_ATTEMPTS) rethrow;
+        await _waitBeforeRetry(attempt);
+      }
+    }
+    return null;
+  }
+  
+  Future<User?> _performRequest(String id) async {
+    // Implémentation de la requête...
+    throw UnimplementedError();
+  }
+  
+  Future<void> _waitBeforeRetry(int attempt) async {
+    await Future.delayed(Duration(seconds: attempt * 2));
+  }
+}
+```
+
+:::tip Conseil Flutter
+En Flutter, utilisez systématiquement `_` pour l'état interne des widgets, les méthodes de callback privées, et toute logique qui ne doit pas être exposée. Cela rend votre code plus maintenable et évite les utilisations non intentionnelles.
+:::
+
+:::warning Attention
+N'oubliez pas que "privé" en Dart = "privé au fichier", pas à la classe. Si vous voulez une vraie encapsulation au niveau classe, séparez vos classes dans des fichiers différents.
+:::
+
 ## 🔧 Constructeurs avancés
 
 ### Constructeurs nommés : clarté et flexibilité

@@ -14,8 +14,7 @@ export default {
           { text: 'Fondamentaux', link: '/dart/' },
           { text: 'Classes et POO', link: '/dart/classes' },
           { text: 'Programmation asynchrone', link: '/dart/async' },
-          { text: 'Manipulation JSON', link: '/dart/json' },
-          { text: 'Syntaxe avancée', link: '/dart/syntaxe-avancee' }
+          { text: 'Manipulation des données', link: '/dart/json' }
         ]
       },
       { 
@@ -48,8 +47,7 @@ export default {
             { text: 'Fondamentaux', link: '/dart/' },
             { text: 'Classes et POO', link: '/dart/classes' },
             { text: 'Programmation asynchrone', link: '/dart/async' },
-            { text: 'Manipulation JSON', link: '/dart/json' },
-            { text: 'Syntaxe avancée', link: '/dart/syntaxe-avancee' }
+            { text: 'Manipulation de données', link: '/dart/json' },
           ]
         }
       ],
@@ -93,7 +91,9 @@ export default {
           text: '🎯 Langage Dart',
           items: [
             { text: 'Fondamentaux', link: '/dart/' },
-            { text: 'Syntaxe avancée', link: '/dart/syntaxe-avancee' }
+            { text: 'Classes et POO', link: '/dart/classes' },
+            { text: 'Programmation asynchrone', link: '/dart/async' },
+            { text: 'Manipulation de données', link: '/dart/json' }
           ]
         },
         {

@@ -5,6 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock
 
+examens/
+
 # VitePress build output
 docs/.vitepress/dist
 docs/.vitepress/cache

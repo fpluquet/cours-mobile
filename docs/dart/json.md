@@ -755,3 +755,1038 @@ class StorageException implements Exception {
 }
 ```
 
+## 🗄️ SQLite en Dart
+
+SQLite est une base de données relationnelle légère et performante, parfaite pour le stockage local d'applications mobiles. En Dart/Flutter, on utilise le package `sqflite` qui fournit une interface moderne avec support des `Future` et null safety.
+
+### Installation et configuration
+
+Ajoutez `sqflite` et `path` à votre `pubspec.yaml` via la commande :
+
+```bash
+flutter pub add sqflite path
+```
+
+
+### Modèle de données pour SQLite
+
+Adaptons notre classe `User` pour SQLite en ajoutant les méthodes nécessaires :
+
+```dart
+class User {
+  final int? id;  // Nullable pour auto-increment
+  final String name;
+  final String? email;
+  final bool isActive;
+  final String? bio;
+  final List<String> skills;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  
+  const User({
+    this.id,
+    required this.name,
+    this.email,
+    this.isActive = true,
+    this.bio,
+    this.skills = const [],
+    required this.createdAt,
+    this.updatedAt,
+  });
+  
+  // Factory constructor depuis Map (résultat SQLite)
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'] as int?,
+      name: map['name'] as String,
+      email: map['email'] as String?,
+      isActive: (map['isActive'] as int) == 1,
+      bio: map['bio'] as String?,
+      skills: map['skills'] != null 
+        ? (jsonDecode(map['skills'] as String) as List<dynamic>)
+            .map((skill) => skill as String)
+            .toList()
+        : [],
+      createdAt: DateTime.parse(map['createdAt'] as String),
+      updatedAt: map['updatedAt'] != null 
+        ? DateTime.parse(map['updatedAt'] as String)
+        : null,
+    );
+  }
+  
+  // Conversion vers Map (pour insertion SQLite)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'isActive': isActive ? 1 : 0,  // SQLite utilise INTEGER pour boolean
+      'bio': bio,
+      'skills': skills.isNotEmpty ? jsonEncode(skills) : null,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
+  
+  // CopyWith pour les mises à jour
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    bool? isActive,
+    String? bio,
+    List<String>? skills,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      isActive: isActive ?? this.isActive,
+      bio: bio ?? this.bio,
+      skills: skills ?? this.skills,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+  
+  @override
+  String toString() {
+    return 'User{id: $id, name: $name, email: $email, isActive: $isActive}';
+  }
+}
+```
+
+### Service de base de données
+
+Créons un service pour gérer la base de données SQLite :
+
+```dart
+import 'dart:async';
+import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+class DatabaseService {
+  static final DatabaseService _instance = DatabaseService._internal();
+  static Database? _database;
+  
+  factory DatabaseService() => _instance;
+  DatabaseService._internal();
+  
+  // Getter pour la base de données
+  Future<Database> get database async {
+    _database ??= await _initDatabase();
+    return _database!;
+  }
+  
+  // Initialisation de la base de données
+  Future<Database> _initDatabase() async {
+    final databasePath = await getDatabasesPath();
+    final path = join(databasePath, 'app_database.db');
+    
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createTables,
+      onUpgrade: _upgradeTables,
+    );
+  }
+  
+  // Création des tables
+  Future<void> _createTables(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE,
+        isActive INTEGER NOT NULL DEFAULT 1,
+        bio TEXT,
+        skills TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT
+      )
+    ''');
+    
+    // Index pour améliorer les performances
+    await db.execute('CREATE INDEX idx_users_email ON users(email)');
+    await db.execute('CREATE INDEX idx_users_active ON users(isActive)');
+  }
+  
+  // Migration de la base de données
+  Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
+    // Exemple de migration
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE users ADD COLUMN lastLoginAt TEXT');
+    }
+  }
+  
+  // Fermer la base de données
+  Future<void> closeDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
+}
+```
+
+### Repository pattern pour les opérations CRUD
+
+```dart
+class UserRepository {
+  final DatabaseService _databaseService = DatabaseService();
+  
+  // Créer un utilisateur
+  Future<User> createUser(User user) async {
+    final db = await _databaseService.database;
+    
+    final userMap = user.toMap();
+    userMap.remove('id'); // Laisser SQLite générer l'ID
+    
+    final id = await db.insert('users', userMap);
+    
+    return user.copyWith(id: id);
+  }
+  
+  // Obtenir un utilisateur par ID
+  Future<User?> getUserById(int id) async {
+    final db = await _databaseService.database;
+    
+    final results = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    
+    if (results.isEmpty) return null;
+    
+    return User.fromMap(results.first);
+  }
+  
+  // Obtenir tous les utilisateurs actifs
+  Future<List<User>> getActiveUsers() async {
+    final db = await _databaseService.database;
+    
+    final results = await db.query(
+      'users',
+      where: 'isActive = ?',
+      whereArgs: [1],
+      orderBy: 'name ASC',
+    );
+    
+    return results.map((map) => User.fromMap(map)).toList();
+  }
+  
+  // Rechercher des utilisateurs par nom ou email
+  Future<List<User>> searchUsers(String query) async {
+    final db = await _databaseService.database;
+    
+    final results = await db.query(
+      'users',
+      where: 'name LIKE ? OR email LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+      orderBy: 'name ASC',
+    );
+    
+    return results.map((map) => User.fromMap(map)).toList();
+  }
+  
+  // Mettre à jour un utilisateur
+  Future<bool> updateUser(User user) async {
+    if (user.id == null) return false;
+    
+    final db = await _databaseService.database;
+    
+    final userMap = user.copyWith(
+      updatedAt: DateTime.now(),
+    ).toMap();
+    
+    final rowsAffected = await db.update(
+      'users',
+      userMap,
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+    
+    return rowsAffected > 0;
+  }
+  
+  // Supprimer un utilisateur (soft delete)
+  Future<bool> deactivateUser(int id) async {
+    final db = await _databaseService.database;
+    
+    final rowsAffected = await db.update(
+      'users',
+      {
+        'isActive': 0,
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    
+    return rowsAffected > 0;
+  }
+  
+  // Supprimer définitivement un utilisateur
+  Future<bool> deleteUser(int id) async {
+    final db = await _databaseService.database;
+    
+    final rowsAffected = await db.delete(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    
+    return rowsAffected > 0;
+  }
+  
+  // Obtenir le nombre d'utilisateurs
+  Future<int> getUserCount() async {
+    final db = await _databaseService.database;
+    
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM users WHERE isActive = 1');
+    
+    return result.first['count'] as int;
+  }
+  
+  // Transaction pour créer plusieurs utilisateurs
+  Future<List<User>> createUsers(List<User> users) async {
+    final db = await _databaseService.database;
+    List<User> createdUsers = [];
+    
+    await db.transaction((txn) async {
+      for (final user in users) {
+        final userMap = user.toMap();
+        userMap.remove('id');
+        
+        final id = await txn.insert('users', userMap);
+        createdUsers.add(user.copyWith(id: id));
+      }
+    });
+    
+    return createdUsers;
+  }
+}
+```
+
+### Utilisation pratique
+
+```dart
+class UserService {
+  final UserRepository _userRepository = UserRepository();
+  
+  // Exemple d'utilisation complète
+  Future<void> demonstrateSQLiteUsage() async {
+    try {
+      // Créer des utilisateurs
+      final alice = User(
+        name: 'Alice Dupont',
+        email: 'alice@example.com',
+        bio: 'Développeuse Flutter passionnée',
+        skills: ['Dart', 'Flutter', 'Firebase'],
+        createdAt: DateTime.now(),
+      );
+      
+      final bob = User(
+        name: 'Bob Martin',
+        email: 'bob@example.com',
+        bio: 'Designer UI/UX',
+        skills: ['Figma', 'Adobe XD'],
+        createdAt: DateTime.now(),
+      );
+      
+      // Insertion en base
+      final createdAlice = await _userRepository.createUser(alice);
+      final createdBob = await _userRepository.createUser(bob);
+      
+      print('Utilisateurs créés: ${createdAlice.id}, ${createdBob.id}');
+      
+      // Recherche
+      final users = await _userRepository.getActiveUsers();
+      print('Utilisateurs actifs: ${users.length}');
+      
+      // Recherche par nom
+      final searchResults = await _userRepository.searchUsers('Alice');
+      print('Résultats de recherche: ${searchResults.length}');
+      
+      // Mise à jour
+      final updatedAlice = createdAlice.copyWith(
+        bio: 'Développeuse Flutter Senior',
+        skills: [...createdAlice.skills, 'GraphQL'],
+      );
+      
+      final updated = await _userRepository.updateUser(updatedAlice);
+      print('Mise à jour réussie: $updated');
+      
+      // Obtenir un utilisateur spécifique
+      final foundUser = await _userRepository.getUserById(createdAlice.id!);
+      print('Utilisateur trouvé: ${foundUser?.name}');
+      
+    } catch (e) {
+      print('Erreur SQLite: $e');
+    }
+  }
+}
+```
+
+### Bonnes pratiques SQLite
+
+```dart
+// Gestion des erreurs spécifiques à SQLite
+class DatabaseException implements Exception {
+  final String message;
+  final String? code;
+  
+  DatabaseException(this.message, [this.code]);
+  
+  @override
+  String toString() => 'DatabaseException: $message ${code != null ? '($code)' : ''}';
+}
+
+// Helper pour les requêtes complexes avec gestion d'erreurs
+class DatabaseHelper {
+  static Future<T> executeWithErrorHandling<T>(
+    Future<T> Function() operation,
+  ) async {
+    try {
+      return await operation();
+    } on DatabaseException {
+      rethrow;
+    } catch (e) {
+      if (e.toString().contains('UNIQUE constraint failed')) {
+        throw DatabaseException('Cette ressource existe déjà', 'UNIQUE_CONSTRAINT');
+      } else if (e.toString().contains('no such table')) {
+        throw DatabaseException('Table introuvable - migration nécessaire', 'TABLE_NOT_FOUND');
+      }
+      throw DatabaseException('Erreur de base de données: $e');
+    }
+  }
+  
+  // Pagination pour de gros datasets
+  static Future<List<Map<String, dynamic>>> getPaginatedResults(
+    Database db,
+    String table, {
+    int page = 1,
+    int pageSize = 20,
+    String? where,
+    List<dynamic>? whereArgs,
+    String? orderBy,
+  }) async {
+    final offset = (page - 1) * pageSize;
+    
+    return await db.query(
+      table,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: orderBy,
+      limit: pageSize,
+      offset: offset,
+    );
+  }
+}
+```
+
+SQLite offre une solution robuste pour la persistence locale avec des performances excellentes et une API moderne en Dart. Le pattern Repository permet de bien séparer la logique métier de l'accès aux données, facilitant les tests et la maintenance.
+
+## 🏛️ ORM pour Flutter
+
+Contrairement aux écosystèmes .NET (Entity Framework) ou Java (Hibernate), Flutter n'a pas d'ORM officiel intégré. Cependant, plusieurs solutions tierces existent pour simplifier l'accès aux données et réduire le code boilerplate.
+
+### Drift (ex-Moor) - L'ORM le plus populaire
+
+**Drift** est l'ORM le plus mature et populaire pour Flutter. Il génère du code type-safe à partir de définitions de tables et offre une API moderne avec support complet de la null safety.
+
+#### Installation
+
+```yaml
+dependencies:
+  drift: ^2.14.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.0
+  path: ^1.8.3
+
+dev_dependencies:
+  drift_dev: ^2.14.0
+  build_runner: ^2.4.0
+```
+
+#### Définition des tables
+
+```dart
+// database.dart
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
+// Définition des tables
+class Users extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get email => text().nullable().unique()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get bio => text().nullable()();
+  TextColumn get skills => text().nullable()(); // JSON array
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+}
+
+class Posts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer().references(Users, #id)();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get content => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get isPublished => boolean().withDefault(const Constant(false))();
+}
+
+// Partie générée automatiquement
+part 'database.g.dart';
+
+@DriftDatabase(tables: [Users, Posts])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 1;
+
+  // Méthodes personnalisées
+  Future<List<User>> getAllActiveUsers() => select(users)
+      .where((user) => user.isActive.equals(true))
+      .orderBy([(user) => OrderingTerm.asc(user.name)])
+      .get();
+
+  Future<User?> getUserByEmail(String email) => (select(users)
+        ..where((user) => user.email.equals(email))
+        ..limit(1))
+      .getSingleOrNull();
+
+  Future<List<Post>> getPostsByUser(int userId) => (select(posts)
+        ..where((post) => post.userId.equals(userId))
+        ..orderBy([(post) => OrderingTerm.desc(post.createdAt)]))
+      .get();
+
+  // Jointures
+  Future<List<PostWithUser>> getPostsWithUsers() {
+    return (select(posts).join([
+      leftOuterJoin(users, users.id.equalsExp(posts.userId)),
+    ]).map((row) {
+      return PostWithUser(
+        post: row.readTable(posts),
+        user: row.readTableOrNull(users),
+      );
+    })).get();
+  }
+
+  // Transactions
+  Future<User> createUserWithPosts(
+    String name,
+    String email,
+    List<String> postTitles,
+  ) {
+    return transaction(() async {
+      final user = await into(users).insertReturning(UsersCompanion(
+        name: Value(name),
+        email: Value(email),
+        createdAt: Value(DateTime.now()),
+      ));
+
+      for (final title in postTitles) {
+        await into(posts).insert(PostsCompanion(
+          userId: Value(user.id),
+          title: Value(title),
+          content: Value('Contenu du post'),
+          createdAt: Value(DateTime.now()),
+        ));
+      }
+
+      return user;
+    });
+  }
+}
+
+// Classes helper
+class PostWithUser {
+  final Post post;
+  final User? user;
+
+  PostWithUser({required this.post, this.user});
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'db.sqlite'));
+    return NativeDatabase.createInBackground(file);
+  });
+}
+```
+
+#### Utilisation de Drift
+
+```dart
+class UserService {
+  final AppDatabase _database = AppDatabase();
+
+  // Opérations CRUD simplifiées
+  Future<List<User>> getActiveUsers() async {
+    return await _database.getAllActiveUsers();
+  }
+
+  Future<User> createUser({
+    required String name,
+    required String email,
+    String? bio,
+    List<String> skills = const [],
+  }) async {
+    return await _database.into(_database.users).insertReturning(
+      UsersCompanion(
+        name: Value(name),
+        email: Value(email),
+        bio: Value(bio),
+        skills: Value(skills.isNotEmpty ? jsonEncode(skills) : null),
+        createdAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<bool> updateUser(int id, {
+    String? name,
+    String? email,
+    bool? isActive,
+    String? bio,
+  }) async {
+    final rowsAffected = await (_database.update(_database.users)
+          ..where((user) => user.id.equals(id)))
+        .write(UsersCompanion(
+      name: name != null ? Value(name) : const Value.absent(),
+      email: email != null ? Value(email) : const Value.absent(),
+      isActive: isActive != null ? Value(isActive) : const Value.absent(),
+      bio: bio != null ? Value(bio) : const Value.absent(),
+      updatedAt: Value(DateTime.now()),
+    ));
+
+    return rowsAffected > 0;
+  }
+
+  Future<void> deleteUser(int id) async {
+    await (_database.delete(_database.users)
+          ..where((user) => user.id.equals(id)))
+        .go();
+  }
+
+  // Recherche avancée
+  Future<List<User>> searchUsers(String query) async {
+    return await (_database.select(_database.users)
+          ..where((user) => user.name.like('%$query%') |
+              user.email.like('%$query%'))
+          ..orderBy([(user) => OrderingTerm.asc(user.name)]))
+        .get();
+  }
+
+  // Relations et jointures
+  Future<List<PostWithUser>> getUserPostsWithDetails(int userId) async {
+    return await (_database.select(_database.posts).join([
+      innerJoin(_database.users, _database.users.id.equalsExp(_database.posts.userId)),
+    ])
+          ..where(_database.posts.userId.equals(userId)))
+        .map((row) => PostWithUser(
+              post: row.readTable(_database.posts),
+              user: row.readTable(_database.users),
+            ))
+        .get();
+  }
+
+  void dispose() {
+    _database.close();
+  }
+}
+```
+
+### Floor - Inspiré de Room (Android)
+
+**Floor** est inspiré de l'ORM Room d'Android et utilise des annotations pour générer le code d'accès aux données.
+
+#### Installation
+
+```yaml
+dependencies:
+  floor: ^1.4.2
+
+dev_dependencies:
+  floor_generator: ^1.4.2
+  build_runner: ^2.4.0
+```
+
+#### Définition avec Floor
+
+```dart
+// entities/user.dart
+import 'package:floor/floor.dart';
+
+@entity
+class User {
+  @PrimaryKey(autoGenerate: true)
+  final int? id;
+
+  final String name;
+  final String? email;
+  final bool isActive;
+  final String? bio;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+
+  User({
+    this.id,
+    required this.name,
+    this.email,
+    this.isActive = true,
+    this.bio,
+    required this.createdAt,
+    this.updatedAt,
+  });
+}
+
+// dao/user_dao.dart
+import 'package:floor/floor.dart';
+import '../entities/user.dart';
+
+@dao
+abstract class UserDao {
+  @Query('SELECT * FROM User WHERE isActive = 1 ORDER BY name ASC')
+  Future<List<User>> findAllActiveUsers();
+
+  @Query('SELECT * FROM User WHERE id = :id')
+  Future<User?> findUserById(int id);
+
+  @Query('SELECT * FROM User WHERE email = :email')
+  Future<User?> findUserByEmail(String email);
+
+  @Query('SELECT * FROM User WHERE name LIKE :query OR email LIKE :query')
+  Future<List<User>> searchUsers(String query);
+
+  @insert
+  Future<int> insertUser(User user);
+
+  @update
+  Future<int> updateUser(User user);
+
+  @delete
+  Future<int> deleteUser(User user);
+
+  @Query('DELETE FROM User WHERE id = :id')
+  Future<int> deleteUserById(int id);
+}
+
+// database.dart
+import 'dart:async';
+import 'package:floor/floor.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
+import 'entities/user.dart';
+import 'dao/user_dao.dart';
+
+part 'database.g.dart';
+
+@Database(version: 1, entities: [User])
+abstract class AppDatabase extends FloorDatabase {
+  UserDao get userDao;
+}
+```
+
+#### Utilisation de Floor
+
+```dart
+class UserRepository {
+  AppDatabase? _database;
+
+  Future<void> _initDatabase() async {
+    _database ??= await $FloorAppDatabase
+        .databaseBuilder('app_database.db')
+        .build();
+  }
+
+  Future<List<User>> getActiveUsers() async {
+    await _initDatabase();
+    return await _database!.userDao.findAllActiveUsers();
+  }
+
+  Future<User> createUser({
+    required String name,
+    required String email,
+    String? bio,
+  }) async {
+    await _initDatabase();
+    
+    final user = User(
+      name: name,
+      email: email,
+      bio: bio,
+      createdAt: DateTime.now(),
+    );
+
+    final id = await _database!.userDao.insertUser(user);
+    return user.copyWith(id: id);
+  }
+
+  Future<bool> updateUser(User user) async {
+    await _initDatabase();
+    final rowsAffected = await _database!.userDao.updateUser(
+      user.copyWith(updatedAt: DateTime.now()),
+    );
+    return rowsAffected > 0;
+  }
+
+  Future<List<User>> searchUsers(String query) async {
+    await _initDatabase();
+    return await _database!.userDao.searchUsers('%$query%');
+  }
+}
+
+// Extension pour copyWith (à ajouter à la classe User)
+extension UserCopyWith on User {
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    bool? isActive,
+    String? bio,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      isActive: isActive ?? this.isActive,
+      bio: bio ?? this.bio,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+```
+
+### ObjectBox - Base de données NoSQL
+
+**ObjectBox** est une base de données NoSQL ultra-rapide spécialement conçue pour le mobile, avec un ORM intégré.
+
+#### Installation
+
+```yaml
+dependencies:
+  objectbox: ^2.2.0
+  objectbox_flutter_libs: any
+
+dev_dependencies:
+  objectbox_generator: any
+  build_runner: ^2.4.0
+```
+
+#### Définition avec ObjectBox
+
+```dart
+// entities/user.dart
+import 'package:objectbox/objectbox.dart';
+
+@Entity()
+class User {
+  @Id()
+  int id = 0;
+
+  String name;
+  String? email;
+  bool isActive;
+  String? bio;
+  List<String> skills;
+  DateTime createdAt;
+  DateTime? updatedAt;
+
+  User({
+    this.id = 0,
+    required this.name,
+    this.email,
+    this.isActive = true,
+    this.bio,
+    this.skills = const [],
+    required this.createdAt,
+    this.updatedAt,
+  });
+}
+
+@Entity()
+class Post {
+  @Id()
+  int id = 0;
+
+  String title;
+  String content;
+  DateTime createdAt;
+  bool isPublished;
+
+  // Relation avec User
+  final user = ToOne<User>();
+
+  Post({
+    this.id = 0,
+    required this.title,
+    required this.content,
+    required this.createdAt,
+    this.isPublished = false,
+  });
+}
+
+// database_service.dart
+import 'package:objectbox/objectbox.dart';
+import 'entities/user.dart';
+import 'entities/post.dart';
+import 'objectbox.g.dart'; // Généré automatiquement
+
+class DatabaseService {
+  late final Store _store;
+  late final Box<User> _userBox;
+  late final Box<Post> _postBox;
+
+  static final DatabaseService _instance = DatabaseService._internal();
+  factory DatabaseService() => _instance;
+  DatabaseService._internal();
+
+  Future<void> init() async {
+    _store = await openStore();
+    _userBox = _store.box<User>();
+    _postBox = _store.box<Post>();
+  }
+
+  // Operations User
+  Future<int> createUser(User user) async {
+    return _userBox.put(user);
+  }
+
+  Future<User?> getUserById(int id) async {
+    return _userBox.get(id);
+  }
+
+  Future<List<User>> getAllActiveUsers() async {
+    final query = _userBox.query(User_.isActive.equals(true))
+        .order(User_.name)
+        .build();
+    
+    final users = query.find();
+    query.close();
+    return users;
+  }
+
+  Future<List<User>> searchUsers(String searchTerm) async {
+    final query = _userBox.query(
+      User_.name.contains(searchTerm, caseSensitive: false) |
+      User_.email.contains(searchTerm, caseSensitive: false)
+    ).build();
+    
+    final users = query.find();
+    query.close();
+    return users;
+  }
+
+  Future<bool> updateUser(User user) async {
+    user.updatedAt = DateTime.now();
+    return _userBox.put(user) != 0;
+  }
+
+  Future<bool> deleteUser(int id) async {
+    return _userBox.remove(id);
+  }
+
+  // Relations
+  Future<List<Post>> getPostsByUser(int userId) async {
+    final query = _postBox.query(Post_.user.equals(userId)).build();
+    final posts = query.find();
+    query.close();
+    return posts;
+  }
+
+  void dispose() {
+    _store.close();
+  }
+}
+```
+
+#### Utilisation d'ObjectBox
+
+```dart
+class UserService {
+  final DatabaseService _db = DatabaseService();
+
+  Future<User> createUser({
+    required String name,
+    required String email,
+    String? bio,
+    List<String> skills = const [],
+  }) async {
+    final user = User(
+      name: name,
+      email: email,
+      bio: bio,
+      skills: skills,
+      createdAt: DateTime.now(),
+    );
+
+    final id = await _db.createUser(user);
+    user.id = id;
+    return user;
+  }
+
+  Future<List<User>> getActiveUsers() async {
+    return await _db.getAllActiveUsers();
+  }
+
+  Future<List<User>> searchUsers(String query) async {
+    return await _db.searchUsers(query);
+  }
+
+  Future<User> createUserWithPost({
+    required String userName,
+    required String email,
+    required String postTitle,
+    required String postContent,
+  }) async {
+    // ObjectBox gère automatiquement les transactions
+    final user = await createUser(name: userName, email: email);
+    
+    final post = Post(
+      title: postTitle,
+      content: postContent,
+      createdAt: DateTime.now(),
+    );
+    post.user.target = user;
+    
+    await _db._postBox.put(post);
+    
+    return user;
+  }
+}
+```
+
+### Comparaison des solutions
+
+| Feature | SQLite pur | Drift | Floor | ObjectBox |
+|---------|------------|-------|-------|-----------|
+| **Facilité d'usage** | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Performance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Type Safety** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Relations** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Migrations** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Taille bundle** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Écosystème** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+
+**Recommandations :**
+- **SQLite pur** : Pour un contrôle total et des performances maximales
+- **Drift** : Pour la plupart des projets Flutter nécessitant un ORM robuste
+- **Floor** : Pour les développeurs venant d'Android (Room)
+- **ObjectBox** : Pour des applications nécessitant des performances extrêmes et des relations complexes
+
+Les ORM simplifient considérablement le développement en réduisant le code boilerplate, en offrant la type safety, et en gérant automatiquement les migrations. Le choix dépend des besoins spécifiques du projet et de l'expérience de l'équipe.
+
