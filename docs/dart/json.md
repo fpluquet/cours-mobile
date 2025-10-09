@@ -292,7 +292,11 @@ class RobustUser {
 
 ## 🌐 API Integration
 
+Dart n'a pas de solution intégrée pour les appels HTTP, mais le package `http` est largement utilisé. Voici un exemple complet d'intégration avec gestion des erreurs, pagination, et un pattern repository avec cache simple.
+
 ### Service HTTP avec modèles
+
+Voici un service API avec des méthodes pour les opérations CRUD, la gestion des erreurs, et la pagination.
 
 ```dart
 import 'dart:convert';
@@ -473,6 +477,8 @@ class UserNotFoundException extends ApiException {
 
 ### Repository pattern
 
+Voici un pattern repository avec un cache simple pour minimiser les appels réseau.
+
 ```dart
 // Interface repository
 abstract class UserRepository {
@@ -564,6 +570,8 @@ class UserRepositoryImpl implements UserRepository {
 ## 💾 Stockage local JSON
 
 ### SharedPreferences pour petites données
+
+On peut utiliser `shared_preferences` pour stocker des données simples en JSON, comme les préférences utilisateur.
 
 ```dart
 import 'package:shared_preferences/shared_preferences.dart';
@@ -663,7 +671,11 @@ class AppSettings {
 }
 ```
 
+Cela permet de stocker et récupérer facilement des données utilisateur et des paramètres d'application.
+
 ### Fichiers JSON pour données complexes
+
+On peut utiliser le package `path_provider` pour obtenir un répertoire de stockage et `dart:io` pour lire/écrire des fichiers JSON plus volumineux.
 
 ```dart
 import 'dart:io';
@@ -743,155 +755,3 @@ class StorageException implements Exception {
 }
 ```
 
-## 🎯 Integration Flutter
-
-### FutureBuilder avec API
-
-```dart
-class UserListScreen extends StatefulWidget {
-  @override
-  _UserListScreenState createState() => _UserListScreenState();
-}
-
-class _UserListScreenState extends State<UserListScreen> {
-  final UserRepository _repository = UserRepositoryImpl();
-  late Future<List<User>> _usersFuture;
-  
-  @override
-  void initState() {
-    super.initState();
-    _usersFuture = _repository.getUsers();
-  }
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Utilisateurs')),
-      body: FutureBuilder<List<User>>(
-        future: _usersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error, size: 64, color: Colors.red),
-                  SizedBox(height: 16),
-                  Text('Erreur: ${snapshot.error}'),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _refresh,
-                    child: Text('Réessayer'),
-                  ),
-                ],
-              ),
-            );
-          }
-          
-          final users = snapshot.data!;
-          
-          if (users.isEmpty) {
-            return Center(
-              child: Text('Aucun utilisateur trouvé'),
-            );
-          }
-          
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return UserTile(
-                  user: user,
-                  onTap: () => _showUserDetail(user),
-                );
-              },
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createUser,
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-  
-  Future<void> _refresh() async {
-    setState(() {
-      _usersFuture = _repository.getUsers();
-    });
-  }
-  
-  void _showUserDetail(User user) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UserDetailScreen(user: user),
-      ),
-    );
-  }
-  
-  void _createUser() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateUserScreen(),
-      ),
-    ).then((_) => _refresh());
-  }
-}
-
-class UserTile extends StatelessWidget {
-  final User user;
-  final VoidCallback onTap;
-  
-  const UserTile({
-    required this.user,
-    required this.onTap,
-    super.key,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: user.profile?.avatar != null
-          ? NetworkImage(user.profile!.avatar!)
-          : null,
-        child: user.profile?.avatar == null
-          ? Text(user.name[0].toUpperCase())
-          : null,
-      ),
-      title: Text(user.name),
-      subtitle: Text(user.email ?? 'Pas d\'email'),
-      trailing: user.isActive
-        ? Icon(Icons.check_circle, color: Colors.green)
-        : Icon(Icons.circle, color: Colors.grey),
-      onTap: onTap,
-    );
-  }
-}
-```
-
-## 🔄 Prochaines étapes
-
-JSON maîtrisé, explorez :
-
-1. **[Syntaxe avancée](./syntaxe-avancee.md)** - Pattern matching pour JSON
-2. **[Flutter HTTP](../flutter/networking.md)** - Dio, interceptors, cache
-3. **[Flutter State Management](../flutter/state-management.md)** - BLoC avec JSON
-4. **[Flutter Local Storage](../flutter/storage.md)** - SQLite, Hive
-
-::: tip 🎯 JSON = Communication
-En Flutter, JSON est partout : APIs REST, GraphQL, Firebase, stockage local. Maîtriser la sérialisation/désérialisation est **crucial** pour toute app moderne !
-:::
-
----
-
-*Direction les concepts avancés de Dart pour finaliser votre apprentissage !*
