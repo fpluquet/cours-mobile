@@ -40,11 +40,57 @@ var isActive = false;       // bool inféré
 var scores = [85, 90, 78];  // List<int> inféré
 ```
 
+Une fois assignée, une variable typée ne peut pas changer de type. Par exemple, `name` est toujours une `String`.
+
+```dart
+name = 42;  // Erreur de compilation
+```
+
+Et pour les variables déclarées avec `var`, le type est fixé à la première assignation.
+
+```dart
+var count = 10; // count est de type int
+count = 'dix'; // Erreur de compilation
+```
+
 Le mot-clé `late` permet de déclarer une variable qui sera initialisée plus tard, mais avant son utilisation.
 
 ```dart
 // late : initialisation différée
 late String configValue;    // Sera initialisé plus tard
+```
+
+### Le type `dynamic` : quand on ne connaît pas le type
+
+Le type `dynamic` permet de déclarer des variables dont le type n'est pas connu à la compilation. C'est un peu comme `var` en JavaScript ou `object` en C#, mais avec plus de flexibilité.
+
+```dart
+// Une variable dynamic peut contenir n'importe quoi
+dynamic data = 'Hello';
+data = 42;          // OK
+data = [1, 2, 3];   // OK aussi
+data = true;        // Toujours OK
+
+// Accès aux propriétés/méthodes
+print(data.length);         // Fonctionne si data a une propriété length
+print(data.toUpperCase());  // Crash à l'exécution si data n'est pas un String
+```
+
+::: warning ⚠️ Utilisez `dynamic` avec parcimonie
+`dynamic` désactive complètement la vérification de type. Vous perdez l'aide de l'IDE (autocomplétion, détection d'erreurs) et risquez des erreurs à l'exécution. Préférez toujours les types explicites quand c'est possible !
+:::
+
+**Cas d'usage légitimes pour `dynamic` :**
+- Données provenant d'APIs externes (JSON)
+- Interopérabilité avec du code JavaScript
+- Prototypage rapide
+- Bibliothèques très génériques
+
+```dart
+// Exemple : traitement de JSON
+dynamic jsonData = jsonDecode('{"name": "Alice", "age": 25}');
+String name = jsonData['name'];  // Conversion explicite nécessaire
+int age = jsonData['age'];
 ```
 
 ### Interpolation de chaînes
