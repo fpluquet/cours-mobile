@@ -24,7 +24,14 @@ export default {
           { text: 'Widgets', link: '/flutter/widgets' },
           { text: 'Gestion d\'état', link: '/flutter/state-management' },
           { text: 'Architecture BLoC', link: '/flutter/bloc-architecture' },
-          { text: 'Firebase', link: '/flutter/firebase-firestore' }
+          { text: 'Firebase', link: '/flutter/firebase-firestore' },
+          { text: 'Bluetooth', link: '/flutter/bluetooth' },
+          { text: 'Géolocalisation', link: '/flutter/geolocalisation' },
+          { text: 'Batterie', link: '/flutter/batterie' },
+          { text: 'Caméra', link: '/flutter/camera' },
+          { text: 'Capteurs', link: '/flutter/capteurs' },
+          { text: 'Stockage', link: '/flutter/stockage' },
+          { text: 'Performance', link: '/flutter/performance' }
         ]
       },
       { 
@@ -62,6 +69,18 @@ export default {
             { text: 'Gestion d\'état', link: '/flutter/state-management' },
             { text: 'Architecture BLoC', link: '/flutter/bloc-architecture' },
             { text: 'Firebase & Firestore', link: '/flutter/firebase-firestore' }
+          ]
+        },
+        {
+          text: '🔧 Fonctionnalités mobiles',
+          items: [
+            { text: '📶 Bluetooth', link: '/flutter/bluetooth' },
+            { text: '📍 Géolocalisation', link: '/flutter/geolocalisation' },
+            { text: '🔋 Batterie', link: '/flutter/batterie' },
+            { text: '📷 Caméra', link: '/flutter/camera' },
+            { text: '📱 Capteurs', link: '/flutter/capteurs' },
+            { text: '💾 Stockage', link: '/flutter/stockage' },
+            { text: '⚡ Performance', link: '/flutter/performance' }
           ]
         }
       ],
@@ -104,6 +123,18 @@ export default {
             { text: 'Gestion d\'état', link: '/flutter/state-management' },
             { text: 'Architecture BLoC', link: '/flutter/bloc-architecture' },
             { text: 'Firebase & Firestore', link: '/flutter/firebase-firestore' }
+          ]
+        },
+        {
+          text: '🔧 Fonctionnalités mobiles',
+          items: [
+            { text: '📶 Bluetooth', link: '/flutter/bluetooth' },
+            { text: '📍 Géolocalisation', link: '/flutter/geolocalisation' },
+            { text: '🔋 Batterie', link: '/flutter/batterie' },
+            { text: '📷 Caméra', link: '/flutter/camera' },
+            { text: '📱 Capteurs', link: '/flutter/capteurs' },
+            { text: '💾 Stockage', link: '/flutter/stockage' },
+            { text: '⚡ Performance', link: '/flutter/performance' }
           ]
         },
         {
