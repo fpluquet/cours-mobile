@@ -7,27 +7,35 @@ Les appareils mobiles modernes intègrent de nombreux capteurs : accéléromètr
 ## Packages Flutter
 
 ### sensors_plus
-```yaml
-dependencies:
-  sensors_plus: ^4.0.2
+
+Package officiel Flutter Community pour accéder aux capteurs de mouvement : accéléromètre, gyroscope et magnétomètre. Idéal pour les applications de réalité augmentée et de détection de mouvements.
+
+```bash
+flutter pub add sensors_plus
 ```
 
 ### light
-```yaml
-dependencies:
-  light: ^3.0.0
+
+Package spécialisé pour mesurer l'intensité lumineuse ambiante. Permet d'adapter automatiquement la luminosité de l'interface ou de créer des applications dépendantes de la lumière.
+
+```bash
+flutter pub add light
 ```
 
 ### proximity_sensor
-```yaml
-dependencies:
-  proximity_sensor: ^1.0.2
+
+Accès au capteur de proximité pour détecter la présence d'objets près de l'appareil. Utile pour désactiver l'écran pendant les appels ou créer des interactions gestuelles.
+
+```bash
+flutter pub add proximity_sensor
 ```
 
 ### flutter_compass
-```yaml
-dependencies:
-  flutter_compass: ^0.7.0
+
+Package pour accéder à la boussole et obtenir l'orientation magnétique de l'appareil. Essentiel pour les applications de navigation et de réalité augmentée basées sur la direction.
+
+```bash
+flutter pub add flutter_compass
 ```
 
 ## Configuration

@@ -7,34 +7,44 @@ Le stockage local est essentiel pour les applications mobiles. Flutter offre plu
 ## Packages Flutter
 
 ### shared_preferences
-```yaml
-dependencies:
-  shared_preferences: ^2.2.2
+
+Solution simple pour stocker des données clé-valeur (paramètres utilisateur, préférences). Idéal pour les configurations et données non sensibles.
+
+```bash
+flutter pub add shared_preferences
 ```
 
 ### sqflite
-```yaml
-dependencies:
-  sqflite: ^2.3.0
+
+Base de données SQLite complète pour Flutter. Parfaite pour les applications nécessitant des requêtes complexes, relations entre tables et gestion de grandes quantités de données.
+
+```bash
+flutter pub add sqflite
 ```
 
 ### path_provider
-```yaml
-dependencies:
-  path_provider: ^2.1.1
+
+Package essentiel pour obtenir les chemins des répertoires système (documents, cache, temporaire). Requis pour la plupart des opérations de stockage de fichiers.
+
+```bash
+flutter pub add path_provider
 ```
 
 ### flutter_secure_storage
-```yaml
-dependencies:
-  flutter_secure_storage: ^9.0.0
+
+Stockage sécurisé utilisant le trousseau iOS et Android Keystore. Indispensable pour sauvegarder tokens, mots de passe et données sensibles.
+
+```bash
+flutter pub add flutter_secure_storage
 ```
 
 ### hive
-```yaml
-dependencies:
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
+
+Base de données NoSQL rapide et légère, alternative moderne à SQLite. Excellente performance avec une API simple, parfaite pour le stockage d'objets complexes.
+
+```bash
+flutter pub add hive
+flutter pub add hive_flutter
 ```
 
 ## Exemples d'implémentation

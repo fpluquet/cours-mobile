@@ -54,24 +54,20 @@ flutterfire configure
 
 #### Configuration manuelle
 
-Si vous préférez configurer manuellement, ajoutez les dépendances :
+Si vous préférez configurer manuellement, ajoutez les dépendances avec les commandes :
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  
-  # Firebase Core (obligatoire)
-  firebase_core: ^2.24.2
-  
-  # Services Firebase
-  cloud_firestore: ^4.13.6
-  firebase_auth: ^4.15.3
-  firebase_storage: ^11.5.6
-  
-  # Utilitaires
-  provider: ^6.1.1
-  equatable: ^2.0.5
+```bash
+# Firebase Core (obligatoire) - Initialisation de base pour tous les services Firebase
+flutter pub add firebase_core
+
+# Services Firebase
+flutter pub add cloud_firestore  # Base de données NoSQL en temps réel
+flutter pub add firebase_auth    # Authentification utilisateur complète
+flutter pub add firebase_storage # Stockage de fichiers dans le cloud
+
+# Utilitaires
+flutter pub add provider   # Gestion d'état réactive et simple
+flutter pub add equatable  # Comparaison d'objets pour optimiser les rebuilds
 ```
 
 #### Initialisation dans main.dart

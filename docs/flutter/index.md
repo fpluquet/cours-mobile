@@ -64,16 +64,16 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # Packages utiles
-  http: ^1.1.0              # Requêtes HTTP
-  provider: ^6.0.5          # Gestion d'état
-  shared_preferences: ^2.2.0 # Stockage local
-  intl: ^0.18.1             # Internationalisation
+  # Packages utiles - Ajoutez-les avec les commandes suivantes :
+  # flutter pub add http               # Client HTTP pour appels API REST et communication réseau
+  # flutter pub add provider           # Gestion d'état simple et efficace, recommandée par Flutter
+  # flutter pub add shared_preferences # Stockage persistant de données simples (paramètres utilisateur)
+  # flutter pub add intl              # Support multilingue et formatage dates/nombres selon la locale
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  # flutter pub add --dev flutter_lints # Règles de lint officielles pour un code Flutter de qualité
 
 # Configuration des assets
 flutter:

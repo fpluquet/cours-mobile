@@ -598,12 +598,12 @@ Le package officiel `flutter_bloc` simplifie grandement l'implémentation du pat
 
 ### Installation
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  flutter_bloc: ^8.1.3
-  equatable: ^2.0.5  # Pour la comparaison d'objets
+```bash
+# Package officiel pour implémenter le pattern BLoC avec widgets dédiés et gestion automatique du cycle de vie
+flutter pub add flutter_bloc
+
+# Package utilitaire pour simplifier la comparaison d'objets et optimiser les performances des BLoCs
+flutter pub add equatable
 ```
 
 ### BLoC avec flutter_bloc

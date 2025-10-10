@@ -7,21 +7,27 @@ La gestion de la batterie est cruciale pour les applications mobiles. Il faut su
 ## Packages Flutter
 
 ### battery_plus
-```yaml
-dependencies:
-  battery_plus: ^4.0.2
+
+Package officiel Flutter Community pour surveiller l'état de la batterie : niveau de charge, état de charge/décharge, et notifications de changements d'état.
+
+```bash
+flutter pub add battery_plus
 ```
 
 ### device_info_plus
-```yaml
-dependencies:
-  device_info_plus: ^9.1.0
+
+Package complet pour obtenir des informations détaillées sur l'appareil : modèle, version OS, mémoire disponible. Utile pour adapter l'application aux capacités du dispositif.
+
+```bash
+flutter pub add device_info_plus
 ```
 
 ### power_save_mode
-```yaml
-dependencies:
-  power_save_mode: ^2.0.0
+
+Package spécialisé pour détecter et réagir au mode économie d'énergie. Permet d'adapter automatiquement les fonctionnalités de l'app selon les paramètres d'économie.
+
+```bash
+flutter pub add power_save_mode
 ```
 
 ## Configuration

@@ -1,6 +1,6 @@
 # Programmation Asynchrone en Dart
  
-## 🎯 L'asynchrone en Dart vs C#/Java
+## 🎯 L'asynchrone en Dart vs C#/JS/Java
 
 La programmation asynchrone en Dart est similaire à C# ou JS `async/await` et Java `CompletableFuture`, mais optimisée pour les applications mobiles et Flutter.
 

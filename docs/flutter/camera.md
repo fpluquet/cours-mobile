@@ -7,21 +7,27 @@ L'accès à l'appareil photo et à la caméra est essentiel pour de nombreuses a
 ## Packages Flutter
 
 ### image_picker
-```yaml
-dependencies:
-  image_picker: ^1.0.4
+
+Package simple et efficace pour sélectionner des images et vidéos depuis la galerie ou capturer depuis la caméra. Solution recommandée pour la plupart des cas d'usage basiques.
+
+```bash
+flutter pub add image_picker
 ```
 
 ### camera
-```yaml
-dependencies:
-  camera: ^0.10.5+4
+
+Package officiel Flutter pour un contrôle avancé de la caméra. Permet de créer des prévisualisations personnalisées, contrôler les paramètres de capture et enregistrer des vidéos.
+
+```bash
+flutter pub add camera
 ```
 
 ### image
-```yaml
-dependencies:
-  image: ^4.1.3
+
+Bibliothèque puissante pour le traitement d'images : redimensionnement, rotation, filtres, conversion de formats. Idéale pour manipuler les images capturées avant sauvegarde.
+
+```bash
+flutter pub add image
 ```
 
 ## Configuration

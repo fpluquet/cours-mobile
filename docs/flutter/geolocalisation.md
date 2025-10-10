@@ -7,15 +7,19 @@ La géolocalisation permet aux applications mobiles de déterminer la position g
 ## Packages Flutter
 
 ### geolocator
-```yaml
-dependencies:
-  geolocator: ^10.1.0
+
+Package populaire et robuste pour la géolocalisation avec support complet des permissions, détection des services de localisation, et calcul de distances entre coordonnées.
+
+```bash
+flutter pub add geolocator
 ```
 
 ### location
-```yaml
-dependencies:
-  location: ^5.0.3
+
+Alternative plus simple à geolocator, offrant une API épurée pour obtenir la position de l'utilisateur avec moins de configuration requise.
+
+```bash
+flutter pub add location
 ```
 
 ## Configuration

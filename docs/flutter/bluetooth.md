@@ -78,15 +78,19 @@ Profil
 ## Packages Flutter
 
 ### flutter_bluetooth_serial
-```yaml
-dependencies:
-  flutter_bluetooth_serial: ^0.4.0
+
+Ce package permet de gérer les connexions Bluetooth classiques sur Flutter. Il offre des fonctionnalités pour la découverte d'appareils, la connexion, l'envoi et la réception de données.
+
+```bash
+flutter pub add flutter_bluetooth_serial
 ```
 
 ### flutter_blue_plus
-```yaml
-dependencies:
-  flutter_blue_plus: ^1.14.6
+
+Ce package est une version améliorée de flutter_blue, offrant une meilleure prise en charge de Bluetooth Low Energy (BLE) avec des fonctionnalités supplémentaires et des corrections de bugs.
+
+```bash
+flutter pub add flutter_blue_plus
 ```
 
 ## Configuration
