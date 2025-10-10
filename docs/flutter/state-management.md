@@ -24,17 +24,22 @@ L'état représente des données qui changent et affectent l'UI. Les données st
 
 ### StatelessWidget
 
-Un `StatelessWidget` est immutable : il ne peut pas changer son état après sa création.
+Un `StatelessWidget` est **immutable** : il ne peut pas changer son état après sa création. Une fois construit, ses propriétés restent fixes.
+
+**Quand l'utiliser :**
+- Pour afficher des données qui ne changent pas
+- Pour des widgets de présentation pure
+- Quand on reçoit des données du widget parent
 
 ```dart
-class MonWidgetStateless extends StatelessWidget {
-  final String titre;
-  final int valeur;
+class AffichageUtilisateur extends StatelessWidget {
+  final String nom;
+  final int age;
   
-  const MonWidgetStateless({
+  const AffichageUtilisateur({
     Key? key,
-    required this.titre,
-    required this.valeur,
+    required this.nom,
+    required this.age,
   }) : super(key: key);
   
   @override
@@ -44,116 +49,82 @@ class MonWidgetStateless extends StatelessWidget {
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
-            Text(
-              titre,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Valeur: $valeur',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(nom, style: Theme.of(context).textTheme.titleLarge),
+            Text('$age ans'),
           ],
         ),
       ),
     );
   }
 }
-
-// Utilisation
-MonWidgetStateless(titre: 'Mon titre', valeur: 42)
 ```
+
+::: tip Astuce
+Utilisez `const` autant que possible avec `StatelessWidget` pour optimiser les performances et éviter les reconstructions inutiles.
+:::
 
 ### StatefulWidget
 
-Un `StatefulWidget` peut changer son état et se redessiner en conséquence.
+Un `StatefulWidget` peut **changer son état** et se redessiner automatiquement. Il est composé de deux classes :
+1. **La classe widget** : définit la configuration
+2. **La classe State** : contient l'état mutable et la logique
+
+**Quand l'utiliser :**
+- Quand des données peuvent changer (compteur, formulaire, etc.)
+- Pour gérer des interactions utilisateur
+- Quand vous avez besoin de `setState()`
 
 ```dart
-class MonWidgetStateful extends StatefulWidget {
-  final String titre;
-  final int valeurInitiale;
-  
-  const MonWidgetStateful({
-    Key? key,
-    required this.titre,
-    this.valeurInitiale = 0,
-  }) : super(key: key);
-  
+class Compteur extends StatefulWidget {
   @override
-  _MonWidgetStatefulState createState() => _MonWidgetStatefulState();
+  _CompteurState createState() => _CompteurState();
 }
 
-class _MonWidgetStatefulState extends State<MonWidgetStateful> {
-  late int _compteur;
-  
-  @override
-  void initState() {
-    super.initState();
-    _compteur = widget.valeurInitiale;
-  }
+class _CompteurState extends State<Compteur> {
+  int _valeur = 0; // État mutable
   
   void _incrementer() {
-    setState(() {
-      _compteur++;
-    });
-  }
-  
-  void _decrementer() {
-    setState(() {
-      _compteur--;
+    setState(() { // Déclenche un rebuild
+      _valeur++;
     });
   }
   
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              widget.titre,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            SizedBox(height: 16),
-            
-            Text(
-              '$_compteur',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            SizedBox(height: 16),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: _decrementer,
-                  icon: Icon(Icons.remove),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.shade100,
-                  ),
-                ),
-                SizedBox(width: 16),
-                IconButton(
-                  onPressed: _incrementer,
-                  icon: Icon(Icons.add),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.green.shade100,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return Column(
+      children: [
+        Text('Compteur: $_valeur'),
+        ElevatedButton(
+          onPressed: _incrementer,
+          child: Text('Incrémenter'),
         ),
-      ),
+      ],
     );
   }
 }
 ```
 
+::: info setState()
+`setState()` informe Flutter qu'un changement a eu lieu et qu'il faut redessiner le widget. **Tout le code qui modifie l'état doit être dans setState()**.
+:::
+  
 ## 🔄 Cycle de vie d'un StatefulWidget
 
-Comprendre le cycle de vie est essentiel pour une gestion d'état efficace :
+Le cycle de vie détermine **quand et comment** votre widget est créé, mis à jour et détruit. Comprendre ce cycle est essentiel pour bien gérer les ressources et éviter les fuites mémoire.
+
+### Les principales méthodes
+
+**1. `initState()`** - Initialisation unique
+- Appelée une seule fois, après la création du widget
+- Utilisée pour initialiser les données, créer des controllers, etc.
+
+**2. `build()`** - Construction de l'interface
+- Appelée à chaque fois que le widget doit être redessiné
+- Doit retourner l'arbre de widgets à afficher
+
+**3. `dispose()`** - Nettoyage final
+- Appelée avant la destruction du widget
+- **OBLIGATOIRE** pour libérer les ressources (controllers, timers, etc.)
 
 ```dart
 class ExempleCycleDeVie extends StatefulWidget {
@@ -162,49 +133,30 @@ class ExempleCycleDeVie extends StatefulWidget {
 }
 
 class _ExempleCycleDeVieState extends State<ExempleCycleDeVie> {
-  String _statut = 'Initialisation';
+  late TextEditingController _controller;
+  String _statut = 'Prêt';
   
   @override
   void initState() {
     super.initState();
-    print('1. initState() - Widget créé');
-    _statut = 'Initialisé';
-    
-    // Ici : initialisation des données, listeners, timers
-    _initialiserDonnees();
-  }
-  
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    print('2. didChangeDependencies() - Dépendances changées');
-    
-    // Ici : réagir aux changements de thème, locale, etc.
+    print('✅ Widget créé');
+    _controller = TextEditingController();
+    _chargerDonnees();
   }
   
   @override
   Widget build(BuildContext context) {
-    print('3. build() - Construction de l\'UI');
-    
+    print('🔄 Interface redessinée');
     return Scaffold(
       appBar: AppBar(title: Text('Cycle de vie')),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Statut: $_statut',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 32),
-            
+            Text('Statut: $_statut'),
+            TextField(controller: _controller),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _statut = 'Mis à jour - ${DateTime.now().millisecondsSinceEpoch}';
-                });
-              },
-              child: Text('Mettre à jour l\'état'),
+              onPressed: () => setState(() => _statut = 'Mis à jour'),
+              child: Text('Mettre à jour'),
             ),
           ],
         ),
@@ -213,56 +165,38 @@ class _ExempleCycleDeVieState extends State<ExempleCycleDeVie> {
   }
   
   @override
-  void didUpdateWidget(ExempleCycleDeVie oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    print('4. didUpdateWidget() - Widget parent modifié');
-    
-    // Ici : réagir aux changements de propriétés du widget parent
-  }
-  
-  @override
-  void deactivate() {
-    print('5. deactivate() - Widget désactivé');
-    super.deactivate();
-  }
-  
-  @override
   void dispose() {
-    print('6. dispose() - Widget détruit');
-    
-    // IMPORTANT : Nettoyer les ressources
-    _nettoyerRessources();
-    
+    print('🗑️ Widget détruit - nettoyage');
+    _controller.dispose(); // IMPORTANT !
     super.dispose();
   }
   
-  void _initialiserDonnees() {
-    // Simulation d'initialisation asynchrone
-    Future.delayed(Duration(seconds: 1), () {
-      if (mounted) { // Vérifier que le widget existe encore
-        setState(() {
-          _statut = 'Données chargées';
-        });
-      }
-    });
-  }
-  
-  void _nettoyerRessources() {
-    // Annuler les timers, fermer les streams, etc.
-    print('Nettoyage des ressources...');
+  void _chargerDonnees() async {
+    await Future.delayed(Duration(seconds: 1));
+    if (mounted) { // Vérifier que le widget existe encore
+      setState(() => _statut = 'Données chargées');
+    }
   }
 }
 ```
 
-::: warning Attention au mounted
-Toujours vérifier `mounted` avant d'appeler `setState()` dans des callbacks asynchrones pour éviter les erreurs si le widget a été détruit.
+::: warning Attention !
+- **Toujours** appeler `dispose()` sur les controllers et streams
+- **Vérifier `mounted`** avant `setState()` dans les callbacks asynchrones
+- **Ne jamais** oublier `super.initState()` et `super.dispose()`
 :::
+            
+## 🎛️ setState() - La base de la gestion d'état
 
-## 🎛️ setState() - Gestion d'état locale
+`setState()` est la méthode fondamentale pour modifier l'état local d'un widget. Elle indique à Flutter qu'il faut redessiner le widget car des données ont changé.
 
-`setState()` est la méthode la plus simple pour gérer l'état local d'un widget.
+### Principe de fonctionnement
 
-### Exemple pratique : Liste de tâches
+1. **Modifier les données** dans la fonction passée à `setState()`
+2. **Flutter redessine** automatiquement le widget
+3. **L'interface se met à jour** avec les nouvelles valeurs
+
+### Exemple simple : Liste de tâches
 
 ```dart
 class ListeTaches extends StatefulWidget {
@@ -271,15 +205,28 @@ class ListeTaches extends StatefulWidget {
 }
 
 class _ListeTachesState extends State<ListeTaches> {
-  List<Tache> _taches = [];
-  final TextEditingController _controller = TextEditingController();
+  List<String> _taches = [];
+  final _controller = TextEditingController();
+  
+  void _ajouterTache() {
+    if (_controller.text.trim().isNotEmpty) {
+      setState(() {
+        _taches.add(_controller.text.trim());
+      });
+      _controller.clear();
+    }
+  }
+  
+  void _supprimerTache(int index) {
+    setState(() {
+      _taches.removeAt(index);
+    });
+  }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Mes tâches (${_taches.length})'),
-      ),
+      appBar: AppBar(title: Text('Mes tâches (${_taches.length})')),
       body: Column(
         children: [
           // Formulaire d'ajout
@@ -290,17 +237,13 @@ class _ListeTachesState extends State<ListeTaches> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'Nouvelle tâche...',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: _ajouterTache,
+                    decoration: InputDecoration(hintText: 'Nouvelle tâche...'),
+                    onSubmitted: (_) => _ajouterTache(),
                   ),
                 ),
-                SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () => _ajouterTache(_controller.text),
-                  child: Icon(Icons.add),
+                IconButton(
+                  onPressed: _ajouterTache,
+                  icon: Icon(Icons.add),
                 ),
               ],
             ),
@@ -309,160 +252,23 @@ class _ListeTachesState extends State<ListeTaches> {
           // Liste des tâches
           Expanded(
             child: _taches.isEmpty
-                ? _buildEmptyState()
+                ? Center(child: Text('Aucune tâche'))
                 : ListView.builder(
                     itemCount: _taches.length,
                     itemBuilder: (context, index) {
-                      return _buildTacheItem(_taches[index], index);
+                      return ListTile(
+                        title: Text(_taches[index]),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _supprimerTache(index),
+                        ),
+                      );
                     },
                   ),
           ),
-          
-          // Statistiques
-          if (_taches.isNotEmpty) _buildStatistiques(),
         ],
       ),
     );
-  }
-  
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.task_alt, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Aucune tâche',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey,
-            ),
-          ),
-          Text(
-            'Ajoutez votre première tâche ci-dessus',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildTacheItem(Tache tache, int index) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        leading: Checkbox(
-          value: tache.estTerminee,
-          onChanged: (value) => _toggleTache(index),
-        ),
-        title: Text(
-          tache.titre,
-          style: TextStyle(
-            decoration: tache.estTerminee 
-                ? TextDecoration.lineThrough 
-                : TextDecoration.none,
-            color: tache.estTerminee 
-                ? Colors.grey 
-                : null,
-          ),
-        ),
-        subtitle: Text(
-          'Créée le ${_formatDate(tache.dateCreation)}',
-          style: TextStyle(fontSize: 12),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.delete, color: Colors.red),
-          onPressed: () => _supprimerTache(index),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildStatistiques() {
-    int terminees = _taches.where((t) => t.estTerminee).length;
-    double pourcentage = terminees / _taches.length;
-    
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        border: Border(top: BorderSide(color: Colors.blue.shade200)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem('Total', _taches.length.toString(), Icons.list),
-          _buildStatItem('Terminées', terminees.toString(), Icons.check_circle),
-          _buildStatItem('Progression', '${(pourcentage * 100).round()}%', Icons.trending_up),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildStatItem(String label, String valeur, IconData icon) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.blue),
-        SizedBox(height: 4),
-        Text(
-          valeur,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.blue.shade800,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.blue.shade600,
-          ),
-        ),
-      ],
-    );
-  }
-  
-  void _ajouterTache(String titre) {
-    if (titre.trim().isEmpty) return;
-    
-    setState(() {
-      _taches.add(Tache(
-        titre: titre.trim(),
-        dateCreation: DateTime.now(),
-      ));
-    });
-    
-    _controller.clear();
-  }
-  
-  void _toggleTache(int index) {
-    setState(() {
-      _taches[index].estTerminee = !_taches[index].estTerminee;
-    });
-  }
-  
-  void _supprimerTache(int index) {
-    setState(() {
-      _taches.removeAt(index);
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tâche supprimée'),
-        action: SnackBarAction(
-          label: 'Annuler',
-          onPressed: () {
-            // Ici, on pourrait implémenter un système d'annulation
-          },
-        ),
-      ),
-    );
-  }
-  
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
   }
   
   @override
@@ -471,148 +277,88 @@ class _ListeTachesState extends State<ListeTaches> {
     super.dispose();
   }
 }
-
-class Tache {
-  String titre;
-  DateTime dateCreation;
-  bool estTerminee;
-  
-  Tache({
-    required this.titre,
-    required this.dateCreation,
-    this.estTerminee = false,
-  });
-}
 ```
 
-## 🌊 StreamBuilder et FutureBuilder
+### Bonnes pratiques avec setState()
 
-Ces widgets permettent de construire une interface réactive basée sur des données asynchrones.
+**✅ À faire :**
+- Modifier l'état uniquement dans `setState()`
+- Garder les modifications simples et rapides
+- Grouper les modifications liées
 
-### FutureBuilder
+**❌ À éviter :**
+- Appeler `setState()` dans `build()`
+- Modifications lourdes dans `setState()`
+- `setState()` après `dispose()`
 
-Pour les opérations asynchrones qui retournent une seule valeur :
+::: tip Performance
+Plus votre méthode `setState()` est légère, plus votre interface sera fluide. Évitez les calculs complexes à l'intérieur.
+:::
+## 🌊 FutureBuilder et StreamBuilder
+
+Ces widgets permettent de construire une interface **réactive** qui s'adapte automatiquement aux données asynchrones.
+
+### FutureBuilder - Pour les opérations ponctuelles
+
+`FutureBuilder` est parfait pour les appels API, le chargement de fichiers, ou toute opération qui retourne **une seule valeur** après un délai.
+
+**Quand l'utiliser :**
+- Appels API REST
+- Lecture de fichiers
+- Opérations de base de données ponctuelles
 
 ```dart
 class ExempleFutureBuilder extends StatelessWidget {
   // Simulation d'un appel API
   Future<List<String>> _chargerDonnees() async {
-    await Future.delayed(Duration(seconds: 2)); // Simulation latence réseau
-    
-    // Simulation d'erreur aléatoire
-    if (Random().nextBool()) {
-      throw Exception('Erreur de connexion au serveur');
-    }
-    
-    return List.generate(10, (index) => 'Élément ${index + 1}');
+    await Future.delayed(Duration(seconds: 2)); // Simulation réseau
+    return ['Élément 1', 'Élément 2', 'Élément 3'];
   }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('FutureBuilder')),
+      appBar: AppBar(title: Text('Chargement de données')),
       body: FutureBuilder<List<String>>(
         future: _chargerDonnees(),
         builder: (context, snapshot) {
-          // Gestion des différents états
+          // État de chargement
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingState();
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Chargement...'),
+                ],
+              ),
+            );
           }
           
+          // Gestion d'erreur
           if (snapshot.hasError) {
-            return _buildErrorState(snapshot.error.toString());
-          }
-          
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 64, color: Colors.red),
+                  Text('Erreur: ${snapshot.error}'),
+                  ElevatedButton(
+                    onPressed: () => (context as Element).markNeedsBuild(),
+                    child: Text('Réessayer'),
+                  ),
+                ],
+              ),
+            );
           }
           
           // Données disponibles
-          return _buildDataState(snapshot.data!);
-        },
-      ),
-    );
-  }
-  
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Chargement des données...'),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error, size: 64, color: Colors.red),
-            SizedBox(height: 16),
-            Text(
-              'Erreur de chargement',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.red),
-            ),
-            SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Redéclencher le build pour relancer le Future
-                (context as Element).markNeedsBuild();
-              },
-              icon: Icon(Icons.refresh),
-              label: Text('Réessayer'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text('Aucune donnée disponible'),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildDataState(List<String> data) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Relancer le chargement
-        await _chargerDonnees();
-      },
-      child: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                child: Text('${index + 1}'),
-              ),
-              title: Text(data[index]),
-              subtitle: Text('Chargé depuis le serveur'),
-              trailing: Icon(Icons.arrow_forward_ios),
+          final donnees = snapshot.data!;
+          return ListView.builder(
+            itemCount: donnees.length,
+            itemBuilder: (context, index) => ListTile(
+              title: Text(donnees[index]),
             ),
           );
         },
@@ -621,10 +367,14 @@ class ExempleFutureBuilder extends StatelessWidget {
   }
 }
 ```
+### StreamBuilder - Pour les données temps réel
 
-### StreamBuilder
+`StreamBuilder` écoute un **flux continu** de données et reconstruit l'interface à chaque nouvelle valeur.
 
-Pour les données qui changent en temps réel :
+**Quand l'utiliser :**
+- Messages en temps réel (chat, notifications)
+- Données capteurs (GPS, accéléromètre)
+- Événements utilisateur continus
 
 ```dart
 class ExempleStreamBuilder extends StatefulWidget {
@@ -634,339 +384,118 @@ class ExempleStreamBuilder extends StatefulWidget {
 
 class _ExempleStreamBuilderState extends State<ExempleStreamBuilder> {
   late StreamController<int> _compteurController;
-  late StreamController<String> _messageController;
-  
   int _compteur = 0;
   Timer? _timer;
   
   @override
   void initState() {
     super.initState();
-    
-    // Initialiser les streams
     _compteurController = StreamController<int>();
-    _messageController = StreamController<String>();
-    
-    // Démarrer le compteur automatique
     _demarrerCompteur();
   }
   
   void _demarrerCompteur() {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       _compteur++;
-      _compteurController.add(_compteur);
-      
-      // Ajouter des messages périodiques
-      if (_compteur % 5 == 0) {
-        _messageController.add('Milestone atteint: $_compteur');
-      }
+      _compteurController.add(_compteur); // Envoyer nouvelle valeur
     });
-  }
-  
-  void _ajouterMessage(String message) {
-    _messageController.add('$message (à ${DateTime.now().second}s)');
   }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('StreamBuilder'),
-        actions: [
-          IconButton(
-            icon: Icon(_timer?.isActive == true ? Icons.pause : Icons.play_arrow),
-            onPressed: _toggleTimer,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Compteur en temps réel
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      'Compteur en temps réel',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    SizedBox(height: 16),
-                    StreamBuilder<int>(
-                      stream: _compteurController.stream,
-                      initialData: 0,
-                      builder: (context, snapshot) {
-                        return Text(
-                          '${snapshot.data}',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            SizedBox(height: 16),
-            
-            // Boutons d'action
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      appBar: AppBar(title: Text('Compteur temps réel')),
+      body: Center(
+        child: StreamBuilder<int>(
+          stream: _compteurController.stream,
+          initialData: 0, // Valeur initiale
+          builder: (context, snapshot) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () => _ajouterMessage('Bouton 1 pressé'),
-                  child: Text('Action 1'),
+                Text(
+                  'Compteur:',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Text(
+                  '${snapshot.data}',
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 ElevatedButton(
-                  onPressed: () => _ajouterMessage('Bouton 2 pressé'),
-                  child: Text('Action 2'),
-                ),
-                ElevatedButton(
-                  onPressed: _resetCompteur,
+                  onPressed: () {
+                    _compteur = 0;
+                    _compteurController.add(_compteur);
+                  },
                   child: Text('Reset'),
                 ),
               ],
-            ),
-            
-            SizedBox(height: 16),
-            
-            // Messages en temps réel
-            Expanded(
-              child: Card(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Messages en temps réel',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    Expanded(
-                      child: StreamBuilder<String>(
-                        stream: _messageController.stream,
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return Center(
-                              child: Text('En attente de messages...'),
-                            );
-                          }
-                          
-                          return ListView(
-                            reverse: true, // Derniers messages en bas
-                            padding: EdgeInsets.all(16),
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.blue.shade200),
-                                ),
-                                child: Text(snapshot.data!),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
   
-  void _toggleTimer() {
-    setState(() {
-      if (_timer?.isActive == true) {
-        _timer?.cancel();
-      } else {
-        _demarrerCompteur();
-      }
-    });
-  }
-  
-  void _resetCompteur() {
-    _compteur = 0;
-    _compteurController.add(_compteur);
-    _ajouterMessage('Compteur remis à zéro');
-  }
-  
   @override
   void dispose() {
     _timer?.cancel();
-    _compteurController.close();
-    _messageController.close();
+    _compteurController.close(); // IMPORTANT !
     super.dispose();
   }
 }
 ```
 
-::: tip Bonnes pratiques avec les Streams
-- Toujours fermer les `StreamController` dans `dispose()`
-- Utiliser `initialData` pour éviter l'état de loading initial
-- Gérer les états d'erreur et de chargement appropriément
-- Préférer `StreamBuilder` pour les données temps réel, `FutureBuilder` pour les appels ponctuels
+::: tip Bonnes pratiques
+- **FutureBuilder** : pour une seule opération asynchrone
+- **StreamBuilder** : pour des données qui changent en continu  
+- Toujours **fermer les StreamController** dans `dispose()`
+- Utiliser **`initialData`** pour éviter l'état de chargement initial
 :::
 
-## ⚡ Optimisation des rebuilds
+## ⚡ Optimisation des performances
 
-### Éviter les rebuilds inutiles
+La gestion d'état peut impacter les performances si elle n'est pas bien maîtrisée. Voici les principes essentiels pour optimiser votre application.
+
+### Comprendre les rebuilds
+
+Chaque fois que `setState()` est appelée, Flutter **redessine tout le widget** et ses enfants. C'est pourquoi il faut minimiser les rebuilds inutiles.
+
+### Technique 1 : Utiliser `const`
+
+Les widgets marqués `const` ne sont **jamais reconstruits**, même si leur parent change.
 
 ```dart
-class OptimisationExample extends StatefulWidget {
+class ExempleOptimisation extends StatefulWidget {
   @override
-  _OptimisationExampleState createState() => _OptimisationExampleState();
+  _ExempleOptimisationState createState() => _ExempleOptimisationState();
 }
 
-class _OptimisationExampleState extends State<OptimisationExample> {
+class _ExempleOptimisationState extends State<ExempleOptimisation> {
   int _compteur = 0;
-  String _texte = 'Texte initial';
   
   @override
   Widget build(BuildContext context) {
-    print('Build() appelé - compteur: $_compteur'); // Pour debug
+    print('Build appelé pour compteur: $_compteur'); // Debug
     
     return Scaffold(
       appBar: AppBar(title: Text('Optimisation')),
       body: Column(
         children: [
-          // Widget qui change souvent
+          // ❌ Se redessine à chaque setState()
           Container(
             padding: EdgeInsets.all(20),
-            color: Colors.blue.shade100,
-            child: Text(
-              'Compteur: $_compteur',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            child: Text('Compteur: $_compteur'),
           ),
           
-          SizedBox(height: 20),
-          
-          // Widget statique - on peut l'optimiser
-          const WidgetStatique(), // const évite les rebuilds inutiles
-          
-          SizedBox(height: 20),
-          
-          // Widget avec builder pour isoler les rebuilds
-          Builder(
-            builder: (context) {
-              print('Builder texte appelé'); // Pour debug
-              return Container(
-                padding: EdgeInsets.all(20),
-                color: Colors.green.shade100,
-                child: Text('Texte: $_texte'),
-              );
-            },
-          ),
-          
-          Spacer(),
-          
-          // Boutons d'action
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _compteur++;
-                  });
-                },
-                child: Text('+ Compteur'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _texte = 'Nouveau texte ${DateTime.now().second}';
-                  });
-                },
-                child: Text('Changer texte'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget statique qui ne devrait jamais être reconstruit
-class WidgetStatique extends StatelessWidget {
-  const WidgetStatique({Key? key}) : super(key: key);
-  
-  @override
-  Widget build(BuildContext context) {
-    print('WidgetStatique build() - ne devrait être appelé qu\'une fois');
-    
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade100,
-        border: Border.all(color: Colors.orange),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.info, size: 32, color: Colors.orange),
-          SizedBox(height: 8),
-          Text(
-            'Widget statique',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.orange.shade800,
-            ),
-          ),
-          Text(
-            'Ce widget ne change jamais',
-            style: TextStyle(color: Colors.orange.shade600),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
-### Techniques d'optimisation
-
-```dart
-// 1. Séparer les widgets qui changent
-class CompteurOptimise extends StatefulWidget {
-  @override
-  _CompteurOptimiseState createState() => _CompteurOptimiseState();
-}
-
-class _CompteurOptimiseState extends State<CompteurOptimise> {
-  int _compteur = 0;
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Compteur optimisé')),
-      body: Column(
-        children: [
-          // Partie qui ne change pas
+          // ✅ Ne se redessine jamais grâce à const
           const EnteteStatique(),
           
-          // Partie qui change - isolée dans son propre widget
-          AffichageCompteur(compteur: _compteur),
-          
-          // Boutons
-          BoutonsAction(
-            onIncrement: () => setState(() => _compteur++),
-            onDecrement: () => setState(() => _compteur--),
-            onReset: () => setState(() => _compteur = 0),
+          ElevatedButton(
+            onPressed: () => setState(() => _compteur++),
+            child: Text('Incrémenter'),
           ),
         ],
       ),
@@ -979,76 +508,129 @@ class EnteteStatique extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    print('EnteteStatique build - ne devrait être appelé qu\'une fois');
     return Container(
-      width: double.infinity,
       padding: EdgeInsets.all(20),
       color: Colors.blue.shade100,
-      child: Text(
-        'Compteur Application',
-        style: Theme.of(context).textTheme.headlineMedium,
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-}
-
-class AffichageCompteur extends StatelessWidget {
-  final int compteur;
-  
-  const AffichageCompteur({Key? key, required this.compteur}) : super(key: key);
-  
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Center(
-        child: Text(
-          '$compteur',
-          style: Theme.of(context).textTheme.displayLarge,
-        ),
-      ),
-    );
-  }
-}
-
-class BoutonsAction extends StatelessWidget {
-  final VoidCallback onIncrement;
-  final VoidCallback onDecrement;
-  final VoidCallback onReset;
-  
-  const BoutonsAction({
-    Key? key,
-    required this.onIncrement,
-    required this.onDecrement,
-    required this.onReset,
-  }) : super(key: key);
-  
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          FloatingActionButton(
-            onPressed: onDecrement,
-            child: Icon(Icons.remove),
-            heroTag: 'decrement',
-          ),
-          FloatingActionButton(
-            onPressed: onReset,
-            child: Icon(Icons.refresh),
-            heroTag: 'reset',
-          ),
-          FloatingActionButton(
-            onPressed: onIncrement,
-            child: Icon(Icons.add),
-            heroTag: 'increment',
-          ),
-        ],
-      ),
+      child: Text('Titre statique'),
     );
   }
 }
 ```
 
-La gestion d'état avec `setState()` est parfaite pour l'état local simple. Dans la prochaine section, nous découvrirons l'[architecture BLoC](./bloc-architecture.md) pour gérer l'état de manière plus structurée dans des applications complexes.
+### Technique 2 : Séparer les widgets
+
+Isolez les parties qui changent dans des widgets distincts pour limiter l'impact des rebuilds.
+
+```dart
+// ❌ Mauvais : tout se redessine
+class CompteurNonOptimise extends StatefulWidget {
+  @override
+  _CompteurNonOptimiseState createState() => _CompteurNonOptimiseState();
+}
+
+class _CompteurNonOptimiseState extends State<CompteurNonOptimise> {
+  int _compteur = 0;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text('Application Compteur'), // Se redessine inutilement
+        Text('Compteur: $_compteur'),
+        ElevatedButton(
+          onPressed: () => setState(() => _compteur++),
+          child: Text('Plus'),
+        ),
+        Text('Footer statique'), // Se redessine inutilement
+      ],
+    );
+  }
+}
+
+// ✅ Bon : seul le compteur se redessine
+class CompteurOptimise extends StatefulWidget {
+  @override
+  _CompteurOptimiseState createState() => _CompteurOptimiseState();
+}
+
+class _CompteurOptimiseState extends State<CompteurOptimise> {
+  int _compteur = 0;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Text('Application Compteur'), // const = pas de rebuild
+        AffichageCompteur(valeur: _compteur), // Widget séparé
+        BoutonIncrement(onPressed: () => setState(() => _compteur++)),
+        const Text('Footer statique'), // const = pas de rebuild
+      ],
+    );
+  }
+}
+
+class AffichageCompteur extends StatelessWidget {
+  final int valeur;
+  
+  const AffichageCompteur({Key? key, required this.valeur}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    return Text('Compteur: $valeur');
+  }
+}
+
+class BoutonIncrement extends StatelessWidget {
+  final VoidCallback onPressed;
+  
+  const BoutonIncrement({Key? key, required this.onPressed}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text('Plus'),
+    );
+  }
+}
+```
+
+### Technique 3 : Utiliser des keys
+
+Les keys aident Flutter à identifier quels widgets ont vraiment changé.
+
+```dart
+// ✅ Bon usage des keys
+ListView.builder(
+  itemCount: items.length,
+  itemBuilder: (context, index) {
+    return ItemWidget(
+      key: ValueKey(items[index].id), // Key unique
+      item: items[index],
+    );
+  },
+)
+```
+
+### Bonnes pratiques pour les performances
+
+**✅ À faire :**
+- Utiliser `const` autant que possible
+- Séparer les widgets qui changent souvent
+- Éviter les calculs lourds dans `build()`
+- Utiliser des keys appropriées pour les listes
+
+**❌ À éviter :**
+- Créer des widgets dans `build()` sans `const`
+- Calculations complexes directement dans `build()`
+- setState() trop fréquents
+- Widgets trop larges (qui font trop de choses)
+
+::: tip Conseil de debug
+Utilisez `print()` dans vos méthodes `build()` pour voir quels widgets se reconstruisent. Cela vous aidera à identifier les optimisations possibles.
+:::
+
+---
+
+La gestion d'état avec `setState()` est parfaite pour l'état local simple. Pour des applications plus complexes, explorez l'[architecture BLoC](./bloc-architecture.md) qui offre une approche plus structurée et testable.
