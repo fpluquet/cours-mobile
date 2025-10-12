@@ -1,6 +1,7 @@
 export default {
   title: 'Développement mobile',
   description: 'Syllabus complet pour le développement mobile avec Flutter et React Native',
+  base: '/cours-mobile/',
   
   // Configuration du thème
   themeConfig: {
