@@ -12,15 +12,17 @@ Le syllabus couvre deux technologies principales :
 
 ### Section Dart
 - Fondamentaux du langage Dart
-- Syntaxe avancée et patterns modernes
+- Classes et programmation orientée objet
 - Programmation asynchrone
-- Null safety et gestion d'erreurs
+- Gestion JSON et sérialisation
 
 ### Section Flutter
 - Introduction au framework Flutter
 - Architecture basée sur les widgets
 - Gestion d'état (StatefulWidget, Provider, BLoC)
 - Intégration Firebase et Firestore
+- Capteurs et fonctionnalités natives (batterie, Bluetooth, caméra, géolocalisation)
+- Optimisation des performances et stockage
 - Exemples d'applications complètes
 
 ### Section React Native
@@ -42,6 +44,8 @@ Le syllabus couvre deux technologies principales :
 # Cloner ou télécharger le projet
 # Puis installer les dépendances
 npm install
+# ou
+yarn install
 ```
 
 ### Lancement du serveur de développement
@@ -49,6 +53,8 @@ npm install
 ```bash
 # Lancer VitePress en mode développement
 npm run dev
+# ou
+yarn dev
 # ou
 npm run docs:dev
 ```
@@ -61,6 +67,8 @@ Le site sera accessible à l'adresse : `http://localhost:5173`
 # Construire le site statique
 npm run build
 # ou
+yarn build
+# ou
 npm run docs:build
 ```
 
@@ -69,6 +77,8 @@ npm run docs:build
 ```bash
 # Prévisualiser la version construite
 npm run preview
+# ou
+yarn preview
 # ou
 npm run docs:preview
 ```
@@ -81,20 +91,36 @@ npm run docs:preview
 │   │   └── config.js               # Configuration principale
 │   ├── index.md                    # Page d'accueil
 │   ├── introduction.md             # Introduction générale
+│   ├── test-mermaid.md            # Tests Mermaid
+│   ├── test-simple.md             # Tests simples
 │   ├── dart/                       # Section Dart
 │   │   ├── index.md               # Fondamentaux Dart
-│   │   └── syntaxe-avancee.md     # Syntaxe avancée
+│   │   ├── async.md               # Programmation asynchrone
+│   │   ├── classes.md             # Classes et POO
+│   │   └── json.md                # Gestion JSON
 │   ├── flutter/                    # Section Flutter
 │   │   ├── index.md               # Introduction Flutter
 │   │   ├── widgets.md             # Widgets avancés
 │   │   ├── state-management.md    # Gestion d'état
 │   │   ├── bloc-architecture.md   # Architecture BLoC
-│   │   └── firebase-firestore.md  # Firebase intégration
+│   │   ├── firebase-firestore.md  # Firebase intégration
+│   │   ├── batterie.md            # Gestion de la batterie
+│   │   ├── bluetooth.md           # Connectivité Bluetooth
+│   │   ├── camera.md              # Utilisation de la caméra
+│   │   ├── capteurs.md            # Capteurs du dispositif
+│   │   ├── geolocalisation.md     # Services de géolocalisation
+│   │   ├── performance.md         # Optimisation des performances
+│   │   └── stockage.md            # Solutions de stockage
 │   └── react-native/               # Section React Native
 │       ├── index.md               # Introduction RN
 │       ├── composants.md          # Composants et layout
 │       └── navigation.md          # Navigation
+├── examens/                        # Matériel d'examen
+│   ├── examen.md                  # Questions d'examen
+│   └── examen.pdf                 # Version PDF
 ├── package.json                    # Configuration npm
+├── yarn.lock                       # Lockfile Yarn
+├── .yarnrc.yml                     # Configuration Yarn
 ├── .gitignore                      # Fichiers ignorés par Git
 └── README.md                       # Ce fichier
 ```
@@ -121,9 +147,9 @@ npm run docs:preview
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Lance le serveur de développement |
-| `npm run build` | Construit le site pour la production |
-| `npm run preview` | Prévisualise la version de production |
+| `npm run dev` / `yarn dev` | Lance le serveur de développement |
+| `npm run build` / `yarn build` | Construit le site pour la production |
+| `npm run preview` / `yarn preview` | Prévisualise la version de production |
 | `npm run serve` | Sert la version construite |
 
 ## 🎨 Personnalisation
@@ -132,7 +158,7 @@ Le thème et la configuration peuvent être modifiés dans le fichier `docs/.vit
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ## 👥 Auteurs
 
