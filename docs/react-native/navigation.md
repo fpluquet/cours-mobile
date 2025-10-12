@@ -88,6 +88,8 @@ export default function App() {
 
 ### Écrans simples pour comprendre la navigation
 
+<div v-pre>
+
 ```jsx
 // HomeScreen.js
 import { View, Text, Button } from 'react-native';
@@ -121,6 +123,8 @@ export default function DetailsScreen({ navigation }) {
   );
 }
 ```
+
+</div>
 
 ### Concepts clés du Stack Navigator
 
@@ -163,6 +167,8 @@ npm install @react-navigation/bottom-tabs
 
 ### Exemple simple et pratique
 
+<div v-pre>
+
 ```jsx
 // App.js
 import { NavigationContainer } from '@react-navigation/native';
@@ -198,7 +204,11 @@ export default function App() {
 }
 ```
 
+</div>
+
 ### Personnalisation des onglets
+
+<div v-pre>
 
 ```jsx
 <Tab.Navigator
@@ -216,6 +226,8 @@ export default function App() {
 </Tab.Navigator>
 ```
 
+</div>
+
 ### Concepts clés des tabs
 
 **Persistance d'état** : Chaque onglet garde son état quand vous changez d'onglet.
@@ -229,6 +241,8 @@ export default function App() {
 Dans la vraie vie, vous combinez souvent plusieurs types de navigation.
 
 ### Architecture typique d'une app
+
+<div v-pre>
 
 ```jsx
 // App.js - Structure complète mais simple
@@ -279,6 +293,9 @@ export default function App() {
 }
 ```
 
+</div>
+```
+
 ### Comment penser l'architecture
 
 1. **Tabs** pour la navigation principale (3-5 sections max)
@@ -286,6 +303,8 @@ export default function App() {
 3. **Écrans modaux** au niveau racine pour les actions transversales
 
 ### Navigation entre différents stacks
+
+<div v-pre>
 
 ```jsx
 // Depuis n'importe quel écran, accéder aux tabs
@@ -301,7 +320,9 @@ navigation.navigate('Main', {
     params: { itemId: 42 }
   }
 });
-``` 
+```
+
+</div> 
 ## 🔧 Hooks de navigation essentiels
 
 React Navigation propose des hooks pour accéder à la navigation depuis n'importe où.
@@ -367,13 +388,16 @@ function MonEcran() {
 <Stack.Screen 
   name="Details" 
   component={DetailsScreen}
-  options={{
-    title: 'Mes détails',
-    headerStyle: { backgroundColor: '#f4511e' },
-    headerTintColor: '#fff',
-    headerTitleStyle: { fontWeight: 'bold' },
-  }}
+  options={headerOptions}
 />
+
+// Où headerOptions est défini comme :
+const headerOptions = {
+  title: 'Mes détails',
+  headerStyle: { backgroundColor: '#f4511e' },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold' },
+};
 ```
 
 ### Header avec boutons
@@ -382,16 +406,19 @@ function MonEcran() {
 <Stack.Screen 
   name="Details" 
   component={DetailsScreen}
-  options={({ navigation }) => ({
-    headerRight: () => (
-      <Button
-        onPress={() => alert('Sauvegardé!')}
-        title="Sauver"
-        color="#fff"
-      />
-    ),
-  })}
+  options={getHeaderOptions}
 />
+
+// Fonction qui retourne les options :
+const getHeaderOptions = ({ navigation }) => ({
+  headerRight: () => (
+    <Button
+      onPress={() => alert('Sauvegardé!')}
+      title="Sauver"
+      color="#fff"
+    />
+  ),
+});
 ```
 
 ### Header dynamique depuis le composant
@@ -399,11 +426,12 @@ function MonEcran() {
 ```jsx
 function DetailsScreen({ navigation }) {
   React.useLayoutEffect(() => {
-    navigation.setOptions({
+    const options = {
       headerRight: () => (
         <Button onPress={() => alert('Mis à jour!')} title="Update" />
       ),
-    });
+    };
+    navigation.setOptions(options);
   }, [navigation]);
   
   return <Text>Contenu des détails</Text>;
