@@ -33,6 +33,8 @@
   "author": "Haute École Louvain en Hainaut (HELHa)",
   "license": "MIT",
   "devDependencies": {
+    "markdown-it-mermaid": "^0.2.5",
+    "mermaid": "^11.12.0",
     "vitepress": "^1.6.4"
   },
   "engines": {

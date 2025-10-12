@@ -16,23 +16,6 @@ Le Bluetooth utilise la bande de fréquence ISM (Industrial, Scientific and Medi
 2. **Slave (Esclave)** : L'appareil qui accepte la connexion
 3. **Piconet** : Réseau formé par un master et jusqu'à 7 slaves actifs
 
-### Comment les appareils se découvrent et se connectent
-
-```mermaid
-sequenceDiagram
-    participant A as Appareil A (Master)
-    participant B as Appareil B (Slave)
-    
-    A->>A: Mode "Discoverable"
-    B->>B: Mode "Inquiry/Scan"
-    A->>B: Diffusion d'annonce
-    B->>A: Réponse d'inquiry
-    A->>B: Demande de connexion
-    B->>A: Acceptation
-    A->>B: Authentification/Pairing
-    B->>A: Confirmation
-    A<->B: Communication établie
-```
 
 ### Les profils Bluetooth
 

@@ -126,18 +126,6 @@ export default {
           ]
         },
         {
-          text: '🔧 Fonctionnalités mobiles',
-          items: [
-            { text: '📶 Bluetooth', link: '/flutter/bluetooth' },
-            { text: '📍 Géolocalisation', link: '/flutter/geolocalisation' },
-            { text: '🔋 Batterie', link: '/flutter/batterie' },
-            { text: '📷 Caméra', link: '/flutter/camera' },
-            { text: '📱 Capteurs', link: '/flutter/capteurs' },
-            { text: '💾 Stockage', link: '/flutter/stockage' },
-            { text: '⚡ Performance', link: '/flutter/performance' }
-          ]
-        },
-        {
           text: '⚛️ React Native',
           items: [
             { text: 'Introduction et bases', link: '/react-native/' },

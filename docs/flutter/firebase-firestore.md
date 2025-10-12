@@ -33,6 +33,7 @@ Firebase est une **plateforme Backend-as-a-Service (BaaS)** développée par Goo
 Pensez à Firebase comme à un "couteau suisse" pour développeurs : au lieu d'acheter chaque outil séparément, vous avez tout en un seul package !
 :::
 
+
 ## 🛠️ Configuration : de zéro à opérationnel
 
 ### Étape 1 : Créer votre projet Firebase
@@ -115,6 +116,8 @@ Stream<User?> authChanges = FirebaseAuth.instance.authStateChanges();
 // L'utilisateur connecté (null si déconnecté)
 User? currentUser = FirebaseAuth.instance.currentUser;
 ```
+
+
 
 ### Service d'authentification simple
 
@@ -303,6 +306,7 @@ L'authentication utilise un Stream parce que l'état de connexion peut changer �
 ## 🗄️ Cloud Firestore : Votre base de données magique
 
 Cloud Firestore est une **base de données NoSQL** qui fonctionne comme un grand classeur numérique où vous organisez vos données différemment d'une base de données traditionnelle.
+
 
 ### Structure Firestore : Collections et Documents
 
@@ -1190,5 +1194,19 @@ test('should add task when AddTask is called', () {
 ::: tip Conseil pro
 Commencez par maîtriser Firebase seul, puis ajoutez BLoC quand votre application grandit. BLoC brille vraiment dans les applications complexes avec beaucoup de logique métier !
 :::
+
+
+### États de l'application expliqués
+
+| État | Description | Action utilisateur |
+|------|-------------|-------------------|
+| **Initializing** | Démarrage de Firebase | Splash screen |
+| **Checking_Auth** | Vérification session | Indicateur de chargement |
+| **Unauthenticated** | Utilisateur non connecté | Écran de connexion |
+| **Authenticated** | Utilisateur connecté | Interface principale |
+| **Loading_Data** | Chargement des données | Spinner de chargement |
+| **Data_Ready** | Données disponibles | Interface complète |
+| **Listening** | Écoute temps réel active | Mises à jour automatiques |
+| **Offline** | Mode hors ligne | Badge "Hors ligne" |
 
 Cette architecture BLoC + Firebase vous prépare au développement d'applications Flutter professionnelles, robustes et maintenables ! 🚀

@@ -17,6 +17,7 @@ Dans les applications simples, `setState()` suffit. Mais à mesure que l'applica
 BLoC suit le principe : **"Tout est un Stream"**. Les événements entrent, la logique métier les traite, et des états en sortent.
 :::
 
+
 ### Comparaison des architectures
 
 | Architecture | Complexité | Testabilité | Cas d'usage |
@@ -47,6 +48,7 @@ Le BLoC garantit un flux de données prévisible :
 4. **L'UI** se reconstruit selon le nouvel State
 
 Cette séparation claire facilite la maintenance et les tests.
+
 
 ## 🔧 BLoC basique (sans package)
 

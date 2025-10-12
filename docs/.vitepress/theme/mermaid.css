@@ -1,0 +1,101 @@
+/* Styles pour les diagrammes Mermaid */
+.mermaid-diagram {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 16px 0;
+  font-family: monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.mermaid-container {
+  margin: 20px 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Style pour les erreurs Mermaid */
+.mermaid-error {
+  color: #d73a49;
+  padding: 16px;
+  border: 1px solid #d73a49;
+  border-radius: 6px;
+  background-color: #ffeef0;
+  margin: 16px 0;
+}
+
+.mermaid-error pre {
+  background-color: #f6f8fa;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.mermaid-error details {
+  margin-top: 8px;
+}
+
+.mermaid-error summary {
+  cursor: pointer;
+  color: #666;
+  font-weight: bold;
+}
+
+/* Mode sombre pour les erreurs Mermaid */
+.dark .mermaid-error {
+  color: #f97583;
+  border-color: #f97583;
+  background-color: #2d1b1f;
+}
+
+.dark .mermaid-error pre {
+  background-color: #161b22;
+  color: #e6edf3;
+}
+
+.dark .mermaid-diagram {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #fff;
+}
+
+/* Amélioration de l'affichage responsive */
+@media (max-width: 768px) {
+  .mermaid-container {
+    margin: 16px 0;
+  }
+  
+  .mermaid-container svg {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Styles spécifiques pour différents types de diagrammes Mermaid */
+.mermaid-container .flowchart-v2 text,
+.mermaid-container .flowchart text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+}
+
+.mermaid-container .sequence text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 12px;
+}
+
+/* Amélioration du contraste en mode sombre */
+.dark .mermaid-container svg {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+.dark .mermaid-container svg text {
+  filter: invert(1) hue-rotate(180deg);
+}
