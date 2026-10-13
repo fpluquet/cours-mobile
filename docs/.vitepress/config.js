@@ -185,7 +185,7 @@ export default {
 
     // Liens sociaux (optionnel)
     socialLinks: [
-      { icon: 'github', link: 'https://github.com' }
+      { icon: 'github', link: 'https://github.com/fpluquet/cours-mobile/' }
     ],
 
     // Configuration de l'édition
