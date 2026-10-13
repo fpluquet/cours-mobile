@@ -47,9 +47,11 @@ Pensez à Firebase comme à un "couteau suisse" pour développeurs : au lieu d'a
 #### Option A : FlutterFire CLI (recommandée)
 
 ```bash
-# 1. Installer les outils
-npm install -g firebase-tools
+# 1. Installer les outils pour Flutter
 dart pub global activate flutterfire_cli
+
+# ... ou pour React Native
+npm install -g firebase-tools
 
 # 2. Se connecter à votre compte Google
 firebase login
