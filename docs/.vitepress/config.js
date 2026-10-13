@@ -152,7 +152,7 @@ export default {
     // Configuration du footer
     footer: {
       message: 'Syllabus de développement mobile',
-      copyright: 'Copyright © 2024-2025 Haute École Louvain en Hainaut (HELHa)'
+      copyright: 'Copyright © Haute École Louvain en Hainaut (HELHa)'
     },
 
     // Recherche locale
@@ -190,7 +190,7 @@ export default {
 
     // Configuration de l'édition
     editLink: {
-      pattern: 'https://github.com/your-repo/edit/main/docs/:path',
+      pattern: 'https://github.com/fpluquet/cours-mobile/edit/main/docs/:path',
       text: 'Modifier cette page'
     },
 
